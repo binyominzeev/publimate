@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const path = require("path");
+const fs = require('fs');
 const { fetchAndStoreChannelData } = require("./youtubeScraper");
 
 const app = express();
@@ -19,6 +20,34 @@ app.get("/api/channels/meta", (req, res) => {
     res.status(404).json({ error: "No metadata found." });
   }
 });
+
+// GET /api/channels/:channelId
+app.get('/api/channels/:channelId', (req, res) => {
+  const channelId = req.params.channelId;
+  const metaPath = path.join(__dirname, 'data', `channel_meta.json`);
+
+  if (!fs.existsSync(metaPath)) {
+    return res.status(404).json({ error: 'Channel metadata not found' });
+  }
+
+  try {
+    const metaRaw = fs.readFileSync(metaPath, 'utf-8');
+    const meta = JSON.parse(metaRaw);
+
+    const channelData = meta[channelId];
+
+    if (!channelData) {
+      return res.status(404).json({ error: 'Channel metadata not found for this ID' });
+    }
+
+    res.json({
+      name: channelData.title || channelData.name || 'Unknown Channel',
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to read channel metadata' });
+  }
+});
+
 
 app.get("/api/channels/:channelId/videos", (req, res) => {
   const channelId = req.params.channelId;
@@ -97,7 +126,6 @@ app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 // --- YouTube Scraper Utility (youtubeScraper.js) ---
 const { google } = require("googleapis");
-const fs = require("fs");
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
 const youtube = google.youtube({ version: "v3", auth: YOUTUBE_API_KEY });
