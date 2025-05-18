@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const path = require("path");
 const { fetchAndStoreChannelData } = require("./youtubeScraper");
 
 const app = express();
@@ -8,6 +9,40 @@ app.use(cors());
 app.use(bodyParser.json());
 
 let queue = [];
+
+app.get("/api/channels/meta", (req, res) => {
+  const metaPath = path.join(__dirname, "data", "channel_meta.json");
+  if (fs.existsSync(metaPath)) {
+    const meta = JSON.parse(fs.readFileSync(metaPath));
+    res.json(meta);
+  } else {
+    res.status(404).json({ error: "No metadata found." });
+  }
+});
+
+app.get("/api/channels/:channelId/videos", (req, res) => {
+  const channelId = req.params.channelId;
+  const filePath = path.join(__dirname, "data", `${channelId}.json`);
+  if (fs.existsSync(filePath)) {
+    const videos = JSON.parse(fs.readFileSync(filePath));
+    res.json(videos);
+  } else {
+    res.status(404).json({ error: "Videos not found" });
+  }
+});
+
+
+app.get("/api/channels/:channelId/videos", (req, res) => {
+  const { channelId } = req.params;
+  const filePath = path.join(__dirname, "data", `${channelId}.json`);
+  if (fs.existsSync(filePath)) {
+    const data = JSON.parse(fs.readFileSync(filePath));
+    res.json(data);
+  } else {
+    res.status(404).json({ error: "Channel not found." });
+  }
+});
+
 
 app.get("/api/queue", (req, res) => {
   res.json(queue);
