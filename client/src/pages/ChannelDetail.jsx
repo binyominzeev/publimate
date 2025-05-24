@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import ChannelName from '../components/ChannelName';
+import TaggingPanel from '../components/TaggingPanel';
 
 axios.defaults.baseURL = "http://localhost:5000";
 
@@ -81,59 +82,17 @@ export default function ChannelDetail() {
     <div>
       <h1 className="text-xl font-bold mb-4">Videos for <ChannelName channelId={channelId} /></h1>
 
-      <div className="mt-4">
-        <button
-          onClick={generateKeywords}
-          disabled={loadingKeywords}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded disabled:opacity-50"
-        >
-          {loadingKeywords ? 'Generating...' : 'Create Keywords'}
-        </button>
+      {/* TaggingPanel can be disabled by commenting out the next line 
+      <TaggingPanel
+        generateKeywords={generateKeywords}
+        loadingKeywords={loadingKeywords}
+        keywordError={keywordError}
+        keywords={keywords}
+        filterTag={filterTag}
+        setFilterTag={setFilterTag}
+      />
+      */}
 
-        {keywordError && (
-          <div className="text-red-500 mt-2">Error: {keywordError}</div>
-        )}
-
-        <h2 className="text-lg font-bold mb-2">Top Keywords</h2>
-
-        {filterTag && (
-          <div className="mb-2">
-            <span className="text-sm mr-2">
-              Filtering by: <strong>{filterTag}</strong>
-            </span>
-            <button
-              onClick={() => setFilterTag(null)}
-              className="text-blue-600 text-sm underline"
-            >
-              Clear filter
-            </button>
-          </div>
-        )}
-
-        <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          {keywords.map((kw) => (
-            <li
-              key={kw.word}
-              className="bg-gray-200 rounded px-2 py-1 text-sm cursor-pointer flex justify-between items-center hover:bg-gray-300"
-              onClick={() => setFilterTag(kw.word)}
-            >
-              <span>{kw.word} <span className="text-gray-500">({kw.count})</span></span>
-              <span
-                className="ml-2 text-red-500 hover:text-red-700"
-                title="Mark as stopword"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // TODO: add backend call here to store this as a stopword
-                  alert(`"${kw.word}" marked as stopword (not implemented)`);
-                }}
-              >
-                ✕
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      
       <table className="w-full border table-auto text-sm">
         <thead>
           <tr>

@@ -238,3 +238,65 @@ async function resolveChannelId(input) {
     throw e;
   }
 }
+
+// Sites management
+const sitesPath = path.join(__dirname, "data", "sites.json");
+
+// Helper to read/write sites
+function readSites() {
+  if (!fs.existsSync(sitesPath)) return [];
+  return JSON.parse(fs.readFileSync(sitesPath, "utf-8"));
+}
+function writeSites(sites) {
+  fs.writeFileSync(sitesPath, JSON.stringify(sites, null, 2));
+}
+
+// Get all sites
+app.get("/api/sites", (req, res) => {
+  res.json(readSites());
+});
+
+// Create a new site
+app.post("/api/sites", (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: "Name required" });
+  const sites = readSites();
+  const siteId = name.trim().toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
+  const newSite = { siteId, name: name.trim(), channels: [] };
+  sites.push(newSite);
+  writeSites(sites);
+  res.json(newSite);
+});
+
+// Get a single site (with channels)
+app.get("/api/sites/:siteId", (req, res) => {
+  const sites = readSites();
+  const site = sites.find(s => s.siteId === req.params.siteId);
+  if (!site) return res.status(404).json({ error: "Site not found" });
+  res.json(site);
+});
+
+// Assign (add) a channel to a site
+app.post("/api/sites/:siteId/channels", (req, res) => {
+  const { channelId } = req.body;
+  if (!channelId) return res.status(400).json({ error: "channelId required" });
+  const sites = readSites();
+  const site = sites.find(s => s.siteId === req.params.siteId);
+  if (!site) return res.status(404).json({ error: "Site not found" });
+  if (!site.channels.includes(channelId)) {
+    site.channels.push(channelId);
+    writeSites(sites);
+  }
+  res.json(site);
+});
+
+// Remove a channel from a site
+app.delete("/api/sites/:siteId/channels/:channelId", (req, res) => {
+  const { siteId, channelId } = req.params;
+  const sites = readSites();
+  const site = sites.find(s => s.siteId === siteId);
+  if (!site) return res.status(404).json({ error: "Site not found" });
+  site.channels = site.channels.filter(id => id !== channelId);
+  writeSites(sites);
+  res.json(site);
+});
