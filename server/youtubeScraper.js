@@ -1,6 +1,7 @@
-const { google } = require("googleapis");
-const fs = require("fs");
-require("dotenv").config();
+import { google } from 'googleapis';
+import fs from 'fs';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
@@ -155,6 +156,6 @@ async function updateChannelMetadata(channelId) {
   console.log(`[UPDATE] Channel metadata updated for ${channelId}`);
 }
 
+export { fetchAndStoreChannelData };
 
-module.exports = { fetchAndStoreChannelData };
 

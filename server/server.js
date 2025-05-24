@@ -1,9 +1,19 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const path = require("path");
-const fs = require('fs');
-const { fetchAndStoreChannelData } = require("./youtubeScraper");
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { google } from "googleapis";
+import { extractKeywords } from './tagging.js';
+
+import { fetchAndStoreChannelData } from './youtubeScraper.js';
+import * as stopwords from 'stopword';
+import natural from 'natural';
+import { franc } from 'franc';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 app.use(cors());
@@ -48,6 +58,19 @@ app.get('/api/channels/:channelId', (req, res) => {
   }
 });
 
+app.post('/api/channels/:channelId/keywords', (req, res) => {
+  const channelId = req.params.channelId;
+  const dataDir = path.join(__dirname, 'data');
+
+  try {
+    const keywords = extractKeywords(channelId, dataDir);
+    console.log(`[KEYWORDS] Saved ${keywords.length} keywords for ${channelId}`);
+    res.json({ success: true, keywords });
+  } catch (error) {
+    console.error('[KEYWORDS] Failed:', error);
+    res.status(500).json({ error: error.message || 'Failed to extract keywords.' });
+  }
+});
 
 app.get("/api/channels/:channelId/videos", (req, res) => {
   const channelId = req.params.channelId;
@@ -124,14 +147,13 @@ app.post("/api/resolve-channel-id", async (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// --- YouTube Scraper Utility (youtubeScraper.js) ---
-const { google } = require("googleapis");
-const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+// resolveChannelId
 
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const youtube = google.youtube({ version: "v3", auth: YOUTUBE_API_KEY });
 
 
-module.exports = { fetchAndStoreChannelData };
+export { fetchAndStoreChannelData };
 
 async function resolveChannelId(input) {
   console.log(`[resolveChannelId] Input: ${input}`);
