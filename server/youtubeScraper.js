@@ -1,6 +1,7 @@
 import { google } from 'googleapis';
 import fs from 'fs';
 import dotenv from 'dotenv';
+import path from 'path';
 dotenv.config();
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
@@ -114,6 +115,26 @@ async function fetchAndStoreChannelData(channelId, progressCallback = () => {}) 
     `data/${channelId}.json`,
     JSON.stringify(videos, null, 2)
   );
+
+  // --- Add this block ---
+  const metaPath = path.join("data", "channel_meta.json");
+  let meta = {};
+  if (fs.existsSync(metaPath)) {
+    try {
+      meta = JSON.parse(fs.readFileSync(metaPath, "utf-8"));
+    } catch (err) {
+      console.error(`[ERROR] Failed to read channel_meta.json:`, err);
+      meta = {};
+    }
+  }
+  meta[channelId] = channelInfo;
+  try {
+    fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
+    console.log(`[META] Updated channel_meta.json for ${channelId}`);
+  } catch (err) {
+    console.error(`[ERROR] Failed to write channel_meta.json:`, err);
+  }
+  // --- End block ---
 }
 
 async function updateChannelMetadata(channelId) {

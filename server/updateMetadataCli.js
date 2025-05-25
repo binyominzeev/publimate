@@ -1,13 +1,14 @@
 // updateChannelMetadata.js
-const fs = require("fs");
-const path = require("path");
-const { google } = require("googleapis");
-require("dotenv").config();
+import fs from "fs";
+import path from "path";
+import { google } from "googleapis";
+import dotenv from "dotenv";
+dotenv.config();
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const youtube = google.youtube({ version: "v3", auth: YOUTUBE_API_KEY });
 
-const DATA_DIR = path.join(__dirname, "data");
+const DATA_DIR = path.join(path.dirname(new URL(import.meta.url).pathname), "data");
 const META_FILE = path.join(DATA_DIR, "channel_meta.json");
 
 async function updateMetadata() {
